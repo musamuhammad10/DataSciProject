@@ -8,53 +8,36 @@ library("dplyr")
 install.packages("epiR")
 library("epiR")
 
-rawdata <- dataset %>%
-  select(1:3, 9, 16, 18:20, 24, 42,46, 58, 70, 75, 77, 85:87)
-rawdata
-
-names(which(colSums(is.na(rawdata))>0))
-
-data <- na.omit(rawdata)
-data
-
 ##########################################################################################################################################################
+# 2. Estimation of the prevalence of sleep disturbance.
 
-# prevelance estimations for epworth.sleepiness.scale
+# filter raw data for only the columns we need to look at, filter out missing values and filter for those of interest
+newdata <- data %>%
+  select(Gender, Age, BMI, Time.from.transplant, 
+         Liver.Diagnosis, Recurrence.of.disease, Rejection.graft.dysfunction, 
+         Any.fibrosis, Renal.Failure, Depression, Corticoid, Epworth.Sleepiness.Scale, 
+         Pittsburgh.Sleep.Quality.Index.Score, Athens.Insomnia.Scale, Berlin.Sleepiness.Scale, 
+         SF36.PCS, SF36.MCS) %>%
+  na.omit(newdata) %>%
+  mutate(Epworth.Sleepiness.Scale = ifelse(Epworth.Sleepiness.Scale > 10, 1, 0)) %>%
+  mutate(Pittsburgh.Sleep.Quality.Index.Score= ifelse(Pittsburgh.Sleep.Quality.Index.Score > 5, 1, 0)) %>%
+  mutate(Athens.Insomnia.Scale = ifelse(Athens.Insomnia.Scale > 5, 1, 0))
 
-ep <- ifelse(data$Epworth.Sleepiness.Scale > 10, 1, 0)
-epsum <- sum(ep)
-nrow(data)
-#ep.prev.est <- epsum/nrow(data)
-ep.prev <- as.matrix(cbind(epsum, nrow(data)))
+# prevalence estimations for epworth.sleepiness.scale
+ep.prev <- as.matrix(cbind(sum(newdata$Epworth.Sleepiness.Scale == 1), nrow(newdata)))
 epi.conf(ep.prev, ctype = "prevalence", method = "exact", design = 1, conf.level = 0.95)
 
-# prevelance estimations for Pittsburgh.Sleep.Quality
-
-pitt <- ifelse(data$Pittsburgh.Sleep.Quality.Index.Score > 4, 1, 0)
-pittsum <- sum(pitt)
-nrow(data)
-#pitt.prev.est <- pittsum/nrow(data)
-pitt.prev <- as.matrix(cbind(pittsum, nrow(data)))
+# prevalence estimations for Pittsburgh.Sleep.Quality
+pitt.prev <- as.matrix(cbind(sum(newdata$Pittsburgh.Sleep.Quality.Index.Score == 1), nrow(newdata)))
 epi.conf(pitt.prev, ctype = "prevalence", method = "exact", design = 1, conf.level = 0.95)
 
-# prevelance estimations for Athens Insomnia Scale
-
-athens <- ifelse(data$Athens.Insomnia.Scale > 5, 1, 0)
-athenssum <- sum(athens)
-nrow(data)
-#athens.prev.est <- athenssum/nrow(data)
-athens.prev <- as.matrix(cbind(athenssum, nrow(data)))
+# prevalence estimations for Athens Insomnia Scale
+athens.prev <- as.matrix(cbind(sum(newdata$Athens.Insomnia.Scale == 1), nrow(newdata)))
 epi.conf(athens.prev, ctype = "prevalence", method = "exact", design = 1, conf.level = 0.95)
 
-# prevelance estimations for berlin.sleepiness.scale
-
-berlin <- ifelse(data$Berlin.Sleepiness.Scale == 1, 1, 0)
-berlinsum <- sum(berlin)
-nrow(data)
-#berlin.prev.est <- berlinsum/nrow(data)
-berlin.prev <- as.matrix(cbind(berlinsum, nrow(data)))
+# prevalence estimations for berlin.sleepiness.scale
+berlin.prev <- as.matrix(cbind(sum(newdata$Berlin.Sleepiness.Scale == 1), nrow(newdata)))
 epi.conf(berlin.prev, ctype = "prevalence", method = "exact", design = 1, conf.level = 0.95)
-
 
 ##########################################################################################################################################################
 
