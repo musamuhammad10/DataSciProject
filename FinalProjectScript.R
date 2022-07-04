@@ -1,10 +1,18 @@
+# Data Science Project - Due July 7
 
-dataset <- project_data
-summary(dataset)
-head(dataset)
+# Research Questions: 
+# 1. What is the prevalence of subjective sleep disturbance and what are its predictors in post liver transplant recipients
+# 2. What is the impact and relationship of sleep disturbance with health related quality of life in these patients
 
-install.packages("dplyr")
-library("dplyr")
+# Goals:
+# 1. Description of relevant data
+# 2. Estimation of the prevalence of sleep disturbance.
+# 3. Identify predictors that are associated with the sleep disturbance.
+# 4. Identify the relationship between sleep disturbance and quality of life (physical and mental).
+
+data <- read.csv("project_data.csv")
+library(dplyr)
+library(tidyr)
 install.packages("epiR")
 library("epiR")
 
@@ -40,45 +48,57 @@ berlin.prev <- as.matrix(cbind(sum(newdata$Berlin.Sleepiness.Scale == 1), nrow(n
 epi.conf(berlin.prev, ctype = "prevalence", method = "exact", design = 1, conf.level = 0.95)
 
 ##########################################################################################################################################################
+# 3. Identify predictors that are associated with the sleep disturbance.
 
+# converting relevant columns to factors
+newdata$Gender <- as.factor(newdata$Gender)
+newdata$Liver.Diagnosis <- as.factor(newdata$Liver.Diagnosis)
+newdata$Recurrence.of.disease <- as.factor(newdata$Recurrence.of.disease)
+newdata$Rejection.graft.dysfunction <- as.factor(newdata$Rejection.graft.dysfunction)
+newdata$Any.fibrosis <- as.factor(newdata$Any.fibrosis)
+newdata$Renal.Failure <- as.factor(newdata$Renal.Failure)
+newdata$Depression <- as.factor(newdata$Depression)
+newdata$Corticoid <- as.factor(newdata$Corticoid)
 
-# 3
-data$Renal.Failure <- as.factor(data$Renal.Failure)
-data$Recurrence.of.disease <- as.factor(data$Recurrence.of.disease)
-data$Rejection.graft.dysfunction <- as.factor(data$Rejection.graft.dysfunction)
-data$Any.fibrosis <- as.factor(data$Any.fibrosis)
-data$Depression <- as.factor(data$Depression)
-data$Liver.Diagnosis <- as.factor(data$Liver.Diagnosis)
-data$Corticoid <- as.factor(data$Corticoid)
-data$Gender <- as.factor(data$Gender)
+newdata$Berlin.Sleepiness.Scale <- as.factor(newdata$Berlin.Sleepiness.Scale)
+newdata$Pittsburgh.Sleep.Quality.Index.Score <- as.factor(newdata$Pittsburgh.Sleep.Quality.Index.Score)
+newdata$Epworth.Sleepiness.Scale <- as.factor(newdata$Epworth.Sleepiness.Scale)
+newdata$Athens.Insomnia.Scale <- as.factor(newdata$Athens.Insomnia.Scale)
 
-
-epworth <- ifelse(data$Epworth.Sleepiness.Scale > 10, 1, 0)
-model1 <- glm(epworth ~ Gender + Age + BMI + Time.from.transplant + 
-              Liver.Diagnosis + Recurrence.of.disease + Rejection.graft.dysfunction +
-              Any.fibrosis + Renal.Failure + Depression + Corticoid, data = data, family = binomial)
-model1
-summary(model1)
-
-# is it 4 or 5????
-pittsburgh <- ifelse(data$Pittsburgh.Sleep.Quality.Index.Score > 4, 1, 0)
-model2 <- glm(pittsburgh ~ Gender + Age + BMI + Time.from.transplant + 
+# conducting logistic regression for each of the 4 sleep tests
+model1 <- glm(Epworth.Sleepiness.Scale ~ Gender + Age + BMI + Time.from.transplant + 
                 Liver.Diagnosis + Recurrence.of.disease + Rejection.graft.dysfunction +
-                Any.fibrosis + Renal.Failure + Depression + Corticoid, data = data, family = binomial)
-model2
+                Any.fibrosis + Renal.Failure + Depression + Corticoid, data = newdata, family = binomial)
 
-athensscale <- ifelse(data$Athens.Insomnia.Scale > 5, 1, 0)
-model3 <- glm(athensscale ~ Gender + Age + BMI + Time.from.transplant + 
+model2 <- glm(Pittsburgh.Sleep.Quality.Index.Score ~ Gender + Age + BMI + Time.from.transplant + 
                 Liver.Diagnosis + Recurrence.of.disease + Rejection.graft.dysfunction +
-                Any.fibrosis + Renal.Failure + Depression + Corticoid, data = data, family = binomial)
-model3
+                Any.fibrosis + Renal.Failure + Depression + Corticoid, data = newdata, family = binomial)
 
-berlinscale <- ifelse(data$Berlin.Sleepiness.Scale == 1, 1, 0)
-model4 <- glm(berlinscale ~ Gender + Age + BMI + Time.from.transplant + 
+model3 <- glm(Athens.Insomnia.Scale ~ Gender + Age + BMI + Time.from.transplant + 
                 Liver.Diagnosis + Recurrence.of.disease + Rejection.graft.dysfunction +
-                Any.fibrosis + Renal.Failure + Depression + Corticoid, data = data, family = binomial)
-model4
+                Any.fibrosis + Renal.Failure + Depression + Corticoid, data = newdata, family = binomial)
 
+model4 <- glm(Berlin.Sleepiness.Scale ~ Gender + Age + BMI + Time.from.transplant + 
+                Liver.Diagnosis + Recurrence.of.disease + Rejection.graft.dysfunction +
+                Any.fibrosis + Renal.Failure + Depression + Corticoid, data = newdata, family = binomial)
+
+
+# gives odds ratios, above 1 means they are risk factors, below 1 means protective factor
+exp(model1$coefficients) 
+# BMI, time from transplant, Recurrence.of.disease1, Rejection.graft.dysfunction1, Depression1, Corticoid1 
+
+exp(model2$coefficients)
+# Gender2, BMI, Liver.Diagnosis2, Liver.Diagnosis3, Liver.Diagnosis4, Liver.Diagnosis5, Recurrence.of.disease1, 
+# Any.fibrosis1, Renal.Failure1, Depression1, Corticoid1 
+
+exp(model3$coefficients) 
+# Gender2, BMI, Liver.Diagnosis2, Liver.Diagnosis3, Liver.Diagnosis4, Liver.Diagnosis5, Recurrence.of.disease1,
+# Any.fibrosis1, Renal.Failure1, Depression1, Corticoid1 
+
+exp(model4$coefficients) 
+# Age, BMI, Liver.Diagnosis2, Liver.Diagnosis5, Recurrence.of.disease1, Any.fibrosis1, Depression1, Corticoid1 
+
+##########################################################################################################################################################
 # 4
 plot(data$Epworth.Sleepiness.Scale, data$SF36.PCS)
 summary(plot(data$Epworth.Sleepiness.Scale, data$SF36.PCS))
