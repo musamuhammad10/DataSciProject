@@ -15,6 +15,8 @@ library(dplyr)
 library(tidyr)
 install.packages("epiR")
 library("epiR")
+library(ISLR)
+library(MASS)
 
 ##########################################################################################################################################################
 # 2. Estimation of the prevalence of sleep disturbance.
@@ -65,45 +67,67 @@ newdata$Pittsburgh.Sleep.Quality.Index.Score <- as.factor(newdata$Pittsburgh.Sle
 newdata$Epworth.Sleepiness.Scale <- as.factor(newdata$Epworth.Sleepiness.Scale)
 newdata$Athens.Insomnia.Scale <- as.factor(newdata$Athens.Insomnia.Scale)
 
-# conducting logistic regression for each of the 4 sleep tests
+# conducting logistic regression for each of the 4 sleep tests using the step back method for variable selection
+# selecting the best model for each sleep scale by the smallest AIC value
+######### in stepAIC function, we used direction="both" it calcs the AIC values in diff variations of the model after taking out and removing the predictors
 model1 <- glm(Epworth.Sleepiness.Scale ~ Gender + Age + BMI + Time.from.transplant + 
                 Liver.Diagnosis + Recurrence.of.disease + Rejection.graft.dysfunction +
                 Any.fibrosis + Renal.Failure + Depression + Corticoid, data = newdata, family = binomial)
+model1.step.back <- stepAIC(model1, direction="both")
+summary(model1.step.back)
 
 model2 <- glm(Pittsburgh.Sleep.Quality.Index.Score ~ Gender + Age + BMI + Time.from.transplant + 
                 Liver.Diagnosis + Recurrence.of.disease + Rejection.graft.dysfunction +
                 Any.fibrosis + Renal.Failure + Depression + Corticoid, data = newdata, family = binomial)
+model2.step.back <- stepAIC(model2, direction="both")
+summary(model2.step.back)
 
 model3 <- glm(Athens.Insomnia.Scale ~ Gender + Age + BMI + Time.from.transplant + 
                 Liver.Diagnosis + Recurrence.of.disease + Rejection.graft.dysfunction +
                 Any.fibrosis + Renal.Failure + Depression + Corticoid, data = newdata, family = binomial)
+model3.step.back <- stepAIC(model3, direction="both")
+summary(model3.step.back)
 
 model4 <- glm(Berlin.Sleepiness.Scale ~ Gender + Age + BMI + Time.from.transplant + 
                 Liver.Diagnosis + Recurrence.of.disease + Rejection.graft.dysfunction +
                 Any.fibrosis + Renal.Failure + Depression + Corticoid, data = newdata, family = binomial)
-
+model4.step.back <- stepAIC(model4, direction="both")
+summary(model4.step.back)
 
 # gives odds ratios, above 1 means they are risk factors, below 1 means protective factor
-exp(model1$coefficients) 
-# BMI, time from transplant, Recurrence.of.disease1, Rejection.graft.dysfunction1, Depression1, Corticoid1 
-
-exp(model2$coefficients)
-# Gender2, BMI, Liver.Diagnosis2, Liver.Diagnosis3, Liver.Diagnosis4, Liver.Diagnosis5, Recurrence.of.disease1, 
-# Any.fibrosis1, Renal.Failure1, Depression1, Corticoid1 
-
-exp(model3$coefficients) 
-# Gender2, BMI, Liver.Diagnosis2, Liver.Diagnosis3, Liver.Diagnosis4, Liver.Diagnosis5, Recurrence.of.disease1,
-# Any.fibrosis1, Renal.Failure1, Depression1, Corticoid1 
-
-exp(model4$coefficients) 
-# Age, BMI, Liver.Diagnosis2, Liver.Diagnosis5, Recurrence.of.disease1, Any.fibrosis1, Depression1, Corticoid1 
+  exp(model1.step.back$coefficients) 
+  # Corticoid1 
+  
+  exp(model2.step.back$coefficients)
+  # Gender2, Depression1, Corticoid1 
+  
+  exp(model3.step.back$coefficients) 
+  # Liver.Diagnosis2, Liver.Diagnosis5, Depression1, Corticoid1 
+  
+  exp(model4.step.back$coefficients) 
+  # BMI
 
 ##########################################################################################################################################################
 # 4
 plot(data$Epworth.Sleepiness.Scale, data$SF36.PCS)
 summary(plot(data$Epworth.Sleepiness.Scale, data$SF36.PCS))
 cor.test(data$Epworth.Sleepiness.Scale, data$SF36.PCS)
-lm(Epworth.Sleepiness.Scale~SF36.PCS, data = data)
-lm(Epworth.Sleepiness.Scale >= 10~SF36.PCS, data = data)
+lm(Epworth.Sleepiness.Scale~SF36.PCS, data = newdata2)
 
+newdata2 <- data %>%
+  select(Gender, Age, BMI, Time.from.transplant, 
+         Liver.Diagnosis, Recurrence.of.disease, Rejection.graft.dysfunction, 
+         Any.fibrosis, Renal.Failure, Depression, Corticoid, Epworth.Sleepiness.Scale, 
+         Pittsburgh.Sleep.Quality.Index.Score, Athens.Insomnia.Scale, Berlin.Sleepiness.Scale, 
+         SF36.PCS, SF36.MCS) %>%
+  na.omit(newdata2)
 
+# regression for physical health
+lm(Epworth.Sleepiness.Scale~SF36.PCS, data = newdata2)
+lm(Pittsburgh.Sleep.Quality.Index.Score~SF36.PCS, data = newdata2)
+lm(Athens.Insomnia.Scale~SF36.PCS, data = newdata2)
+
+# regression for mental health
+lm(Epworth.Sleepiness.Scale~SF36.MCS, data = newdata2)
+lm(Pittsburgh.Sleep.Quality.Index.Score~SF36.MCS, data = newdata2)
+lm(Athens.Insomnia.Scale~SF36.MCS, data = newdata2)
