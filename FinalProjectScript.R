@@ -106,3 +106,4 @@ cor.test(data$Epworth.Sleepiness.Scale, data$SF36.PCS)
 lm(Epworth.Sleepiness.Scale~SF36.PCS, data = data)
 lm(Epworth.Sleepiness.Scale >= 10~SF36.PCS, data = data)
 
+
